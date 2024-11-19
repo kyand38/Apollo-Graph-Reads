@@ -1,7 +1,7 @@
-import User, { UserDocument } from '../src/models/User.js'
+import User, { UserDocument } from '../models/User.js'
 import { GraphQLError } from 'graphql'
-import { signToken, AuthenticationError } from '../src/services/auth.js';
-import { BookDocument } from '../src/models/Book.js';
+import { signToken, AuthenticationError } from '../services/auth.js';
+import { BookDocument } from '../models/Book.js';
 
 // Todo: getSingleUser, createUser, login, saveBook, deleteBook, 
 
@@ -28,24 +28,22 @@ interface addBookArgs {
 }
 
 interface deleteBookArgs {
-    userId: string;
-    book: BookDocument
+    bookId: string;
 }
 
 
 
 const resolvers = {
     Query: {
-        getSingleUser: async (_parent: unknown, { userId }: UserArgs) => {
-            if (!userId) {
-                throw new GraphQLError('User ID is required.');
-            }
-            return await User.findOne({ _id: userId }).populate('savedBooks');
+        me: async (_parent: unknown, _args: UserArgs, context: any) => {
+            console.log('Here is context', context.user)
+            
+            return await User.findOne({ _id: context.user._id }).populate('savedBooks');
         }
     },
 
     Mutation: {
-        createUser: async (_parent: any, { username, email, password }: CreateUserArgs): Promise<{ token: string; user: UserDocument }> => {
+        addUser: async (_parent: any, { username, email, password }: CreateUserArgs): Promise<{ token: string; user: UserDocument }> => {
             if (!/^\S+@\S+\.\S+$/.test(email)) {
                 throw new GraphQLError('Invalid email format.');
             }
@@ -69,6 +67,7 @@ const resolvers = {
 
         login: async (_parent: any, { email, password }: loginArgs): Promise<{ token: string; user: UserDocument }> => {
             const user = await User.findOne({ email: email.toLowerCase() });
+
             if (!/^\S+@\S+\.\S+$/.test(email)) {
                 throw new GraphQLError('Invalid email format.');
             }
@@ -86,8 +85,8 @@ const resolvers = {
             return { token, user };
         },
 
-        saveBook: async (_parent: any, { userId, book }: addBookArgs) => {
-            const user = await User.findById(userId);
+        saveBook: async (_parent: any, { book }: addBookArgs, context: any) => {
+            const user = await User.findById(context.user._id);
             if (!user) {
                 throw new GraphQLError('User not found');
             }
@@ -98,19 +97,20 @@ const resolvers = {
                 { new: true, runValidators: true }
             );
             if (!updatedUser) {
-                throw new GraphQLError('Book has NOT been saved to document.')
+                throw new GraphQLError('Book has NOT been saved to document.');
             }
             return updatedUser;
         },
 
-        deleteBook: async (_parent: any, { userId, book }: deleteBookArgs) => {
-            const user = await User.findById(userId);
+        removeBook: async (_parent: any, { bookId }: deleteBookArgs, context: any) => {
+            console.log('HERE IS BOOK', bookId)
+            const user = await User.findById(context.user._id);
             if (!user) {
                 throw new GraphQLError('User not found')
             }
             const updatedUser = await User.findByIdAndUpdate(
                 user.id,
-                { $pull: { savedBooks: { bookId: book.bookId } } },
+                { $pull: { savedBooks: { bookId } } },
                 { new: true, runValidators: true },
             );
             if (!updatedUser) {
