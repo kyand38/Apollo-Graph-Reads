@@ -98,6 +98,7 @@ const resolvers = {
             if (!updatedUser) {
                 throw new GraphQLError('Book has NOT been saved to document.');
             }
+            console.log(updatedUser)
             return updatedUser;
         },
 
