@@ -14,7 +14,6 @@ interface CreateUserArgs {
     username: string;
     email: string;
     password: string;
-    userId: string;
 }
 
 interface loginArgs {
