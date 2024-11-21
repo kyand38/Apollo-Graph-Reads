@@ -16,9 +16,10 @@ const SavedBooks = () => {
   });
 
   // use this to determine if `useEffect()` hook needs to run again
-  const userDataLength = Object.keys(userData).length;
   const [removeBook] = useMutation(REMOVE_BOOK);
-  const {data} = useQuery(QUERY_ME)
+
+  const {data, refetch} = useQuery(QUERY_ME)
+
   useEffect(() => {
     const getUserData = async () => {
       try {
@@ -54,15 +55,12 @@ const SavedBooks = () => {
 
       // upon success, remove book's id from localStorage
       removeBookId(bookId);
+
+      refetch();
     } catch (err) {
       console.error(err);
     }
   };
-
-  // if data isn't here yet, say so
-  if (!userDataLength) {
-    return <h2>LOADING...</h2>;
-  }
 
   return (
     <>
