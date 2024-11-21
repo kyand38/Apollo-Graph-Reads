@@ -44,7 +44,7 @@ A full-stack application built with the MERN stack (MongoDB, Express.js, React, 
     npm install
  - Client dependencies
     ```bash
-    cd ../client<br/>
+    cd ../client  
     npm install
 3. Set up environment variables:
  - Create a .env file in the server directory with the following:  
